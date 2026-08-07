@@ -1,0 +1,96 @@
+﻿# =============================================
+#  Nova Robot — .gitignore
+# =============================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+wheels/
+.eggs/
+lib/
+lib64/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg-link
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- YOLO model files (large binaries, download separately) ---
+*.weights
+*.cfg
+
+# --- Arduino / IDE ---
+*.elf
+*.hex
+*.map
+*.bin
+*.d
+*.o
+/build/
+build-*/
+
+# --- PlatformIO ---
+.pio/
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+
+# --- VS Code ---
+.vscode/
+*.code-workspace
+
+# --- JetBrains IDEs ---
+.idea/
+*.iml
+
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# --- Windows ---
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --- Linux ---
+*~
+
+# --- Logs & temp files ---
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# --- Credentials (never commit real credentials) ---
+secrets.py
+config_local.py
+.env.local
