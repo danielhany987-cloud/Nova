@@ -68,6 +68,8 @@ Prices vary by region and supplier. See the Bill of Materials for the full compo
 | Multiple Buck Converters | Configure voltage to match servo and electronics requirements |
 | Small Bluetooth Speaker | |
 | Jumper Wires | |
+|Electrolytic Capacitor||
+|Ceramic Disc Capacitor||
 | Servo Mounting Screws | Included with the servos |
 | Rear Cover Screws | |
 | ~1063 g PLA Filament | For all 3D-printed structural parts |
