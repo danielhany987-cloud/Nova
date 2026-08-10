@@ -4,7 +4,7 @@ import subprocess
 import time
 import os
 
-ESP32_CAM_URL = os.getenv('ESP32_CAM_URL', "http://YOUR_ESP32_CAM_IP/stream")
+ESP32_CAM_URL = os.getenv('ESP32_CAM_URL', "http://http://YOUR_ESP32_CAM_IP//stream")
 
 # --- Tuning for low-end CPU / 4GB RAM (i5 laptop) ---
 # Reduce CPU load by running inference less often.
@@ -111,33 +111,48 @@ if cap is None or not cap.isOpened():
     print("Make sure the URL works in your browser/VLC, and that you're on the right port/path.", flush=True)
     raise SystemExit(1)
 
-# One timer per object
-last_spoken = {}
-SPEAK_COOLDOWN = 1.0  # seconds per object
+# Global speech timer
+last_speech_time = 0
+SPEAK_COOLDOWN = 2.0  # global seconds between speeches
 
 def speak(text):
-    # Avoid overlapping speech processes (overlap can cause CPU spikes and stutter).
     global speech_proc
-    try:
-        if speech_proc is not None and speech_proc.poll() is None:
-            return
-    except Exception:
-        pass
 
-    # Use a hidden, no-profile PowerShell process for lower overhead.
+    # If another speech process is still running, don't start a new one.
+    if speech_proc is not None:
+        try:
+            if speech_proc.poll() is None:
+                # Fallback: if PowerShell hangs for more than 5 seconds, kill it
+                # so the speech system remains responsive.
+                if getattr(speech_proc, '_start_time', time.time()) < time.time() - 5.0:
+                    try: speech_proc.kill()
+                    except: pass
+                    speech_proc = None
+                else:
+                    return False
+            else:
+                speech_proc = None
+        except Exception:
+            speech_proc = None
+
+    # Start a new speech process.
+    # We pipe stdout/stderr to DEVNULL and properly Dispose the synthesizer
+    # to prevent PowerShell from permanently hanging in the background.
     speech_proc = subprocess.Popen([
         "powershell",
         "-NoProfile",
         "-WindowStyle",
         "Hidden",
         "-Command",
-        f"Add-Type -AssemblyName System.Speech;"
-        f"(New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('{text}')"
-    ])
+        f"Add-Type -AssemblyName System.Speech; "
+        f"$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+        f"$s.Speak('{text}'); "
+        f"$s.Dispose()"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    speech_proc._start_time = time.time()
+    return True
 
-# Avoid many simultaneous PowerShell speech spawns (can reduce smoothness).
-# Cooldown still applies per-label; this just caps new speeches per frame.
-SPEAK_MAX_PER_FRAME = 2
 
 print("Running. Press Q to quit.")
 
@@ -152,6 +167,10 @@ while True:
     ret, frame = cap.read()
     if not ret:
         continue
+
+    # Release finished speech process
+    if speech_proc is not None and speech_proc.poll() is not None:
+        speech_proc = None
 
     frame = cv2.resize(frame, (DISPLAY_W, DISPLAY_H))
     h, w = frame.shape[:2]
@@ -225,7 +244,7 @@ while True:
                 pass
 
     now = time.time()
-    speeches_this_frame = 0
+    
     for label, x, y, bw, bh in last_detections:
         cv2.rectangle(frame, (x, y), (x + bw, y + bh), (0, 255, 0), 1)
         cv2.putText(
@@ -237,11 +256,9 @@ while True:
             (0, 255, 0),
             1,
         )
-        last = last_spoken.get(label, 0)
-        if speeches_this_frame < SPEAK_MAX_PER_FRAME and now - last >= SPEAK_COOLDOWN:
-            speak(label)
-            last_spoken[label] = now
-            speeches_this_frame += 1
+        if now - last_speech_time >= SPEAK_COOLDOWN:
+            if speak(label):
+                last_speech_time = now
 
     cv2.imshow("ESP32 YOLO PC SPEAK (REAL)", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
