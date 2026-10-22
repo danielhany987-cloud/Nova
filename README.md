@@ -112,7 +112,7 @@ The complete build guide is on YouTube, including:
 - Calibration
 - Final demonstration
 
-**Watch the full build guide: https://youtube.com/@danielhany-o4g?si=fyO8ZAEhHYOVosV6**
+**Watch the full build guide: [https://youtube.com/@danielhany-o4g?si=fyO8ZAEhHYOVosV6](https://www.youtube.com/@futureformrobotics-q4m/videos)**
 
 > Assembly instructions, wiring diagrams, and setup steps are covered in the video rather than in this repository.
 
